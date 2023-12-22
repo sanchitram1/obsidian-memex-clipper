@@ -45,23 +45,25 @@ export default class MemexClipper extends Plugin {
 		this.addRibbonIcon('dice', 'Greet', async () => {
 			const clippings = await this.findAllFilesWithClippings();
 
-			new Notice("Found " + clippings.length + " clippings")
-
 			for (const file of clippings) {
-				new Notice("Processing " + file.basename);
 				const fileData = await processor.process(file);
 				if (fileData) {
 					const clip = new Clip(fileData.properties, fileData.highlights, this.app.vault, this.settings.destination);
 					files.push(clip);
 				}
 			}
-			console.log("Populated the files");
 
 			// save the files
+			let saved_count = 0; // why doesn't this reset to 0 every time?
 			for (const file of files) {
-				const result = file.save();
-				console.log(result);
+				try {
+					saved_count += file.save();
+				} catch (error) {
+					new Notice("Error saving " + file.name)
+				}
+
 			}
+			new Notice(saved_count + " clippings saved")
 		});
 
 

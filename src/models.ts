@@ -24,4 +24,5 @@ export interface MemexSyncProperties {
 	Title?: string;
 	Author?: string | null;
 	"Created at"?: string;
+	Url?: string;
 }

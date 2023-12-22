@@ -48,7 +48,7 @@ export class Clip {
 						this.properties.url = typeof value === 'string' ? value : '';
 						break;
 					default:
-						console.log("Unknown key: " + key)
+						console.debug("Unknown key: " + key)
 				}
 
                 this.properties.published = '';
@@ -57,8 +57,8 @@ export class Clip {
 		}
 	}
 
-    public save(): string {
-        console.log("Saving the clip");
+    public save(): number {
+        console.debug("Saving the clip");
 
         if (this.name === "") {
             throw new Error("Clip name is empty");
@@ -73,7 +73,7 @@ export class Clip {
             this.update();
         }
 
-        return this.name;
+        return 1;
     }
 
     private update() {
@@ -88,7 +88,7 @@ export class Clip {
     }
 
     private create() {
-        console.log("Creating " + this.destination + "/" + this.name + ".md")
+        console.debug("Creating " + this.destination + "/" + this.name + ".md")
         this.vault.create(
             this.destination + "/" + this.name + ".md",
             this.format()
@@ -108,12 +108,13 @@ export class Clip {
         const title = "title: " + this.properties.title + "\n"
         const author = "author: " + this.properties.author + "\n"
         const created = "clipped: " + this.properties.clipped + "\n" 
-        const tags = "tags: " + this.properties.tags + "\n"
         const published = "published: " + this.properties.published + "\n"
         const topics = "topics: " + this.properties.topics + "\n"
+        const url = "url: " + this.properties.url + "\n"
+        const tags = "tags: " + this.properties.tags + "\n"
         const tail = "---\n";
 
-        return header + category + title + author + created + tags + published + topics + tail;
+        return header + category + title + author + created + published + url + topics + tags + tail;
     }
 
     private formatContent() {
@@ -127,7 +128,7 @@ export class Clip {
     }
 
     private exists(): boolean {
-        return searchFileName(this.name, this.vault);
+        return searchFileName(this.name + ".md", this.vault);
     }
 
 	private setName = (name: string) => {
