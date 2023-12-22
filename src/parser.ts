@@ -71,6 +71,9 @@ export class FrontMatterParser {
 		if (parsedData.Spaces) {
 			properties.Spaces = parsedData.Spaces;
 		}
+		if (parsedData.Url) {
+			properties.Url = parsedData.Url;
+		}
 
 		return properties;
 	}
