@@ -3,6 +3,7 @@ export interface MyPluginSettings {
 }
 
 export interface Property {
+	// TODO: derived from a template
 	category: string[];
 	title?: string;
 	author?: string | null;

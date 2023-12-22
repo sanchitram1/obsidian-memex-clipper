@@ -7,12 +7,20 @@ export class Clip {
 	properties: Property;
 	content: Annotation[];
     vault: Vault;
+    overwrite = false;
+    destination: string;
 
-	constructor(properties: MemexSyncProperties, annotations: Annotation[], vault: Vault) {
+	constructor(
+        properties: MemexSyncProperties, 
+        annotations: Annotation[], 
+        vault: Vault, 
+        destination: string
+    ) {
 		this.properties = {category: ["\"[[Clippings]]\""]};
 		this.mapProperties(properties);
 		this.content = annotations;
         this.vault = vault;
+        this.destination = destination;
 	}
 
 	private mapProperties(originalProperties: MemexSyncProperties) {
@@ -49,7 +57,7 @@ export class Clip {
 		}
 	}
 
-    public save() {
+    public save(): string {
         console.log("Saving the clip");
 
         if (this.name === "") {
@@ -64,17 +72,25 @@ export class Clip {
         } else {
             this.update();
         }
+
+        return this.name;
     }
 
     private update() {
-        // pass for now
-        console.log("Updating the clip")
+        if (this.overwrite) {
+            // TODO: Implement overwrite
+            console.debug("Overwriting existing " + this.name);
+        } else {
+            // TODO: display notice
+            console.debug("Not overwriting existing " + this.name)
+        }
         return true;
     }
 
     private create() {
+        console.log("Creating " + this.destination + "/" + this.name + ".md")
         this.vault.create(
-            "Test-Clipper/" + this.name + ".md",
+            this.destination + "/" + this.name + ".md",
             this.format()
         );
     }
@@ -111,9 +127,6 @@ export class Clip {
     }
 
     private exists(): boolean {
-        // check if the clip exists
-        // if yes, update
-        // if no, create
         return searchFileName(this.name, this.vault);
     }
 
