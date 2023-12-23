@@ -17,8 +17,6 @@ const DEFAULT_SETTINGS: Partial<MemexSettings> = {
 	destination: "Clippings"
 }
 
-// TODO: delete old
-
 export default class MemexClipper extends Plugin {
 
 	settings: MemexSettings;
@@ -39,22 +37,26 @@ export default class MemexClipper extends Plugin {
 
 		const parser = new FrontMatterParser();
 		const processor = new FileProcessor(parser, file => this.app.vault.read(file));
-		const files: Clip[] = [];
 
 		// This creates an icon in the left ribbon.
 		this.addRibbonIcon('dice', 'Greet', async () => {
 			const clippings = await this.findAllFilesWithClippings();
+			const files: Clip[] = [];
 
 			for (const file of clippings) {
 				const fileData = await processor.process(file);
 				if (fileData) {
-					const clip = new Clip(fileData.properties, fileData.highlights, this.app.vault, this.settings.destination);
+					const clip = new Clip(
+						fileData.properties,
+						fileData.highlights,
+						this.app.vault,
+						this.settings.destination
+					);
 					files.push(clip);
 				}
 			}
 
-			// save the files
-			let saved_count = 0; // why doesn't this reset to 0 every time?
+			let saved_count = 0;
 			for (const file of files) {
 				try {
 					saved_count += file.save();
