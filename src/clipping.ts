@@ -1,61 +1,63 @@
 import { Property, Annotation, MemexSyncProperties } from "src/models";
 import { searchFileName } from "src/utils";
-import { Vault } from "obsidian";
+import { TFile, Vault } from "obsidian";
 
 export class Clip {
-	name: string;
-	properties: Property;
-	content: Annotation[];
+    name: string;
+    properties: Property;
+    content: Annotation[];
     vault: Vault;
     overwrite = false;
     destination: string;
 
-	constructor(
-        properties: MemexSyncProperties, 
-        annotations: Annotation[], 
-        vault: Vault, 
-        destination: string
+    constructor(
+        properties: MemexSyncProperties,
+        annotations: Annotation[],
+        vault: Vault,
+        destination: string,
+        overwrite: boolean
     ) {
-		this.properties = {category: ["\"[[Clippings]]\""]};
-		this.mapProperties(properties);
-		this.content = annotations;
+        this.properties = { category: ["\"[[Clippings]]\""] };
+        this.mapProperties(properties);
+        this.content = annotations;
         this.vault = vault;
         this.destination = destination;
-	}
+        this.overwrite = overwrite;
+    }
 
-	private mapProperties(originalProperties: MemexSyncProperties) {
-		for (const key in originalProperties) {
-			if (originalProperties.hasOwnProperty(key)) {
-				const value = originalProperties[key as keyof MemexSyncProperties]; // Type assertion
+    private mapProperties(originalProperties: MemexSyncProperties) {
+        for (const key in originalProperties) {
+            if (originalProperties.hasOwnProperty(key)) {
+                const value = originalProperties[key as keyof MemexSyncProperties]; // Type assertion
 
-				switch (key) {
-					case "Spaces":
-						this.properties.tags = Array.isArray(value) ? value.map(
-							(tag: string) => tag.toLowerCase().replace(/\[|\]/g, '').trim()
-						) : [];
-						break;
-					case "Title":
-						this.properties.title = typeof value === 'string' ? value : '';
-						this.setName(this.properties.title);
-						break;
-					case "Author":
-						this.properties.author = (typeof value === 'string' || value === null) ? value : '';
-						break;
-					case "Created at":
-						this.properties.clipped = typeof value === 'string' ? value : '';
-						break;
-					case "Url":
-						this.properties.url = typeof value === 'string' ? value : '';
-						break;
-					default:
-						console.debug("Unknown key: " + key)
-				}
+                switch (key) {
+                    case "Spaces":
+                        this.properties.tags = Array.isArray(value) ? value.map(
+                            (tag: string) => tag.toLowerCase().replace(/\[|\]/g, '').trim()
+                        ) : [];
+                        break;
+                    case "Title":
+                        this.properties.title = typeof value === 'string' ? value : '';
+                        this.setName(this.properties.title);
+                        break;
+                    case "Author":
+                        this.properties.author = (typeof value === 'string' || value === null) ? value : '';
+                        break;
+                    case "Created at":
+                        this.properties.clipped = typeof value === 'string' ? value : '';
+                        break;
+                    case "Url":
+                        this.properties.url = typeof value === 'string' ? value : '';
+                        break;
+                    default:
+                        console.debug("Unknown key: " + key)
+                }
 
                 this.properties.published = '';
                 this.properties.topics = [];
-			}
-		}
-	}
+            }
+        }
+    }
 
     public save(): number {
         console.debug("Saving the clip");
@@ -68,31 +70,37 @@ export class Clip {
 
         // checkIfExists.  if yes, update.  if no, create.
         if (!this.exists()) {
-            this.create();
+            return this.create();
         } else {
-            this.update();
+            return this.update();
         }
-
-        return 1;
     }
 
-    private update() {
+    private update(): number {
         if (this.overwrite) {
-            // TODO: Implement overwrite
             console.debug("Overwriting existing " + this.name);
-        } else {
-            // TODO: display notice
-            console.debug("Not overwriting existing " + this.name)
-        }
-        return true;
+            const existing_file = this.vault.getAbstractFileByPath(
+                this.destination + "/" + this.name + ".md"
+            );
+            // Update if it's a TFile (being safe)
+            if (existing_file instanceof TFile) {
+                this.vault.modify(
+                    existing_file,
+                    this.format()
+                )
+            }
+            return 1
+        } 
+        return 0
     }
 
-    private create() {
+    private create(): number {
         console.debug("Creating " + this.destination + "/" + this.name + ".md")
         this.vault.create(
             this.destination + "/" + this.name + ".md",
             this.format()
         );
+        return 1;
     }
 
     private format() {
@@ -103,18 +111,17 @@ export class Clip {
     }
 
     private formatProperties() {
-        const header = "---\n";
+        const yaml = "---\n";
         const category = "category: " + this.properties.category + "\n"
         const title = "title: " + this.properties.title + "\n"
         const author = "author: " + this.properties.author + "\n"
-        const created = "clipped: " + this.properties.clipped + "\n" 
+        const created = "clipped: " + this.properties.clipped + "\n"
         const published = "published: " + this.properties.published + "\n"
         const topics = "topics: " + this.properties.topics + "\n"
         const url = "url: " + this.properties.url + "\n"
         const tags = "tags: " + this.properties.tags + "\n"
-        const tail = "---\n";
 
-        return header + category + title + author + created + published + url + topics + tags + tail;
+        return yaml + category + title + author + created + published + url + topics + tags + yaml;
     }
 
     private formatContent() {
@@ -131,7 +138,7 @@ export class Clip {
         return searchFileName(this.name + ".md", this.vault);
     }
 
-	private setName = (name: string) => {
-		this.name = name;
-	}
+    private setName = (name: string) => {
+        this.name = name;
+    }
 }

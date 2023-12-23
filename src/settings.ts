@@ -61,6 +61,17 @@ export class MemexClipperSettings extends PluginSettingTab {
                     this.plugin.settings.template = value;
                     await this.plugin.saveSettings();
                 }))
+
+        new Setting(containerEl)
+            .setName("Overwrite")
+            .setDesc("Overwrite existing files?")
+            .addToggle((toggle) =>
+                toggle
+                .setValue(this.plugin.settings.overwrite)
+                .onChange(async (value) => {
+                    this.plugin.settings.overwrite = value;
+                    await this.plugin.saveSettings();
+                }))
     }
 }
 
