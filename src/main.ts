@@ -8,13 +8,15 @@ interface MemexSettings {
 	memexFolder: string;
 	template: string;
 	destination: string;
+	overwrite: boolean;
 }
 
 const DEFAULT_SETTINGS: Partial<MemexSettings> = {
 	dateFormat: 'YYYY-MM-DD',
 	memexFolder: 'Memex-Local-Sync',
 	template: "",
-	destination: "Clippings"
+	destination: "Clippings",
+	overwrite: false
 }
 
 export default class MemexClipper extends Plugin {
@@ -50,7 +52,8 @@ export default class MemexClipper extends Plugin {
 						fileData.properties,
 						fileData.highlights,
 						this.app.vault,
-						this.settings.destination
+						this.settings.destination,
+						this.settings.overwrite
 					);
 					files.push(clip);
 				}
@@ -65,7 +68,12 @@ export default class MemexClipper extends Plugin {
 				}
 
 			}
-			new Notice(saved_count + " clippings saved")
+
+			if (saved_count == 0 && this.settings.overwrite == false) {
+				new Notice("No new and not overwriting")
+			} else {
+				new Notice(saved_count + " updates made")
+			}
 		});
 
 
