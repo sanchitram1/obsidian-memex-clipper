@@ -38,10 +38,7 @@ export class Clip {
                         break;
                     case "Title":
                         this.properties.title = typeof value === 'string' ? value : '';
-                        this.setName(this.properties.title);
-                        break;
-                    case "Author":
-                        this.properties.author = (typeof value === 'string' || value === null) ? value : '';
+                        this.setName(this.properties.title.replace(/\//g, '-'));
                         break;
                     case "Created at":
                         this.properties.clipped = typeof value === 'string' ? value : '';
@@ -50,18 +47,17 @@ export class Clip {
                         this.properties.url = typeof value === 'string' ? value : '';
                         break;
                     default:
-                        console.debug("Unknown key: " + key)
+                        console.warn("Unknown key: " + key)
                 }
 
                 this.properties.published = '';
+                this.properties.author = '';
                 this.properties.topics = [];
             }
         }
     }
 
     public save(): number {
-        console.debug("Saving the clip");
-
         if (this.name === "") {
             throw new Error("Clip name is empty");
         } else if (this.properties.title === "") {
@@ -78,7 +74,7 @@ export class Clip {
 
     private update(): number {
         if (this.overwrite) {
-            console.debug("Overwriting existing " + this.name);
+            console.log("Overwriting existing " + this.name);
             const existing_file = this.vault.getAbstractFileByPath(
                 this.destination + "/" + this.name + ".md"
             );
@@ -95,7 +91,7 @@ export class Clip {
     }
 
     private create(): number {
-        console.debug("Creating " + this.destination + "/" + this.name + ".md")
+        console.log("Creating " + this.destination + "/" + this.name + ".md")
         this.vault.create(
             this.destination + "/" + this.name + ".md",
             this.format()

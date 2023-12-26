@@ -6,6 +6,10 @@ import * as yaml from 'js-yaml';
 export class FrontMatterParser {
 	// Function to parse the front-matter of a Memex Sync File
 
+	constructor(private ignore: string[]) {
+		this.ignore = ignore.map((tag: string) => tag.toLowerCase().replace(/\[|\]/g, '').trim());
+	}
+
 	public parseProperties(content: string): MemexSyncProperties {
 		const frontMatterRegex = /---\n([\s\S]*?)\n---/;
 		const match = frontMatterRegex.exec(content);
@@ -62,17 +66,19 @@ export class FrontMatterParser {
 		if (parsedData.Title) {
 			properties.Title = parsedData.Title;
 		}
-		if (parsedData.Author) {
-			properties.Author = parsedData.Author;
+		if (parsedData.Url) {
+			properties.Url = parsedData.Url;
 		}
 		if (parsedData['Created at']) {
 			properties['Created at'] = parseDate(parsedData['Created at']);
+			console.log(properties['Created at']);
 		}
 		if (parsedData.Spaces) {
-			properties.Spaces = parsedData.Spaces;
-		}
-		if (parsedData.Url) {
-			properties.Url = parsedData.Url;
+			properties.Spaces = parsedData.Spaces.filter(
+				(space: string) => !this.ignore.includes(
+					space.toLowerCase().replace(/\[|\]/g, '').trim()
+				)
+			);
 		}
 
 		return properties;

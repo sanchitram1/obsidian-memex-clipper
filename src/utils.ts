@@ -5,9 +5,9 @@ export function parseDate (dateString: string): string {
     const parts = dateString.replace(/\[|\]/g, '').trim().split('-');
     if (parts.length === 3) {
         const year = parseInt(parts[0]);
-        const day = parseInt(parts[1]);
-        const month = parseInt(parts[2]);
-        const formattedDate = new Date(year, month, day).toISOString();
+        const month = parseInt(parts[1]);
+        const day = parseInt(parts[2]);
+        const formattedDate = new Date(year, month-1, day).toISOString().split('T')[0];
         return formattedDate;
     }
     throw new Error('Invalid date format');
