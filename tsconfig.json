@@ -4,6 +4,7 @@
     "inlineSourceMap": true,
     "inlineSources": true,
     "module": "ESNext",
+    // "esModuleInterop": true,
     "target": "ES6",
     "allowJs": true,
     "noImplicitAny": true,

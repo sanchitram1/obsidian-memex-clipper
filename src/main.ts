@@ -2,21 +2,15 @@ import { Notice, Plugin } from 'obsidian';
 import { FrontMatterParser, FileProcessor } from './parser';
 import { Clip } from './clipping';
 import { MemexClipperSettings } from './settings';
-
-interface MemexSettings {
-	dateFormat: string;
-	memexFolder: string;
-	template: string;
-	destination: string;
-	overwrite: boolean;
-}
+import { MemexSettings } from './models';
 
 const DEFAULT_SETTINGS: Partial<MemexSettings> = {
 	dateFormat: 'YYYY-MM-DD',
 	memexFolder: 'Memex-Local-Sync',
 	template: "",
 	destination: "Clippings",
-	overwrite: false
+	overwrite: false,
+	ignore: ["Saved from Mobile", "Inbox"] // default from Memex
 }
 
 export default class MemexClipper extends Plugin {
@@ -37,7 +31,7 @@ export default class MemexClipper extends Plugin {
 		await this.loadSettings()
 		this.addSettingTab(new MemexClipperSettings(this.app, this))
 
-		const parser = new FrontMatterParser();
+		const parser = new FrontMatterParser(this.settings.ignore);
 		const processor = new FileProcessor(parser, file => this.app.vault.read(file));
 
 		// This creates an icon in the left ribbon.

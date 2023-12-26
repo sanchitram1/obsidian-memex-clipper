@@ -26,3 +26,12 @@ export interface MemexSyncProperties {
 	"Created at"?: string;
 	Url?: string;
 }
+
+export interface MemexSettings {
+	dateFormat: string;
+	memexFolder: string;
+	template: string;
+	destination: string;
+	overwrite: boolean;
+	ignore: string[];
+}
