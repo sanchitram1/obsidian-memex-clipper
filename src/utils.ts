@@ -1,4 +1,5 @@
-import { Vault } from 'obsidian';
+import { TFile, Vault } from 'obsidian';
+import { DefaultClip, MemexSyncProperties } from './models';
 
 export function parseDate (dateString: string): string {
     // receives a string in the format YYYY-DD-MM and returns a date object
@@ -21,4 +22,45 @@ export function searchFileName (fileName: string, vault: Vault): boolean {
         }
     }
     return false
+}
+
+export function returnTFile (fileName: string, vault: Vault): TFile {
+
+    if (!fileName.endsWith('.md')) {
+        fileName += '.md';  
+    }
+
+    const files = vault.getFiles();
+    for (const file of files) {
+        if (file.name === fileName) {
+            return file;
+        }
+    }
+    throw new Error('File not found');
+}
+
+export function createDefaultTemplateObject(): DefaultClip {
+    const defaultObject: DefaultClip = {
+        "category": ["[[Clippings]]"],
+        "title": "",
+        "author": "",
+        "published": "",
+        "clipped": "",
+        "topics": [],
+        "tags": [],
+        "source": ""
+
+    }
+    return defaultObject
+}
+
+export function createDefaultMemexObject(): MemexSyncProperties {
+    const defaultObject: MemexSyncProperties = {
+        "Spaces": [],
+        "Title": "",
+        "Author": "",
+        "Created at": "",
+        "Url": ""
+    }
+    return defaultObject
 }

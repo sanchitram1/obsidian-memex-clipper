@@ -48,17 +48,18 @@ export class MemexClipperSettings extends PluginSettingTab {
                     .onChange(async (value) => {
                         this.plugin.settings.template = value;
                         await this.plugin.saveSettings();
+                        await this.plugin.onload();
                     }))
 
         new Setting(containerEl)
             .setName("Destination")
-            .setDesc("Where should I output files? (Default is root)")
+            .setDesc("Default folder to save your clipping")
             .addText((memexSetting) =>
                 memexSetting
-                    .setPlaceholder("")
-                    .setValue(this.plugin.settings.template)
+                    .setPlaceholder("Clippings")
+                    .setValue(this.plugin.settings.destination)
                     .onChange(async (value) => {
-                        this.plugin.settings.template = value;
+                        this.plugin.settings.destination = value;
                         await this.plugin.saveSettings();
                     }))
 
