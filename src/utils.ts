@@ -14,10 +14,11 @@ export function parseDate (dateString: string): string {
     throw new Error('Invalid date format');
 }
 
-export function searchFileName (fileName: string, vault: Vault): boolean {
+export function searchFileName (fileName: string, vault: Vault, folder: string | null): boolean {
     const files = vault.getFiles();
+    const parent = folder ? folder : '';
     for (const file of files) {
-        if (file.name === fileName) {
+        if (file.name === fileName && file.parent?.name === parent) {
             return true;
         }
     }

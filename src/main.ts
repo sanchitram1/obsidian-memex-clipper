@@ -100,12 +100,8 @@ export default class MemexClipper extends Plugin {
 		const clippingsFiles = [];
 
 		for (const file of files) {
-			const content = await this.app.vault.read(file);
-
-			// Define a regular expression to match the "Spaces" category followed by "[[Clippings]]"
-			const spacesRegex = /Spaces:.*?\[\[Clippings\]\]/s;
-
-			if (spacesRegex.test(content)) {
+			const parent = file.parent ? file.parent.name : "";
+			if (parent == this.settings.memexFolder) {
 				clippingsFiles.push(file);
 			}
 		}
