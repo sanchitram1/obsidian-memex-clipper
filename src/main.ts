@@ -1,13 +1,14 @@
 import { Notice, Plugin } from 'obsidian';
-import { FrontMatterParser, FileProcessor } from './parser';
+import { StructureParser, MemexFile } from './parser';
 import { Clip } from './clipping';
 import { MemexClipperSettings } from './settings';
-import { MemexSettings } from './models';
+import { MemexSettings, TProperties } from './models';
+import { returnTFile, createDefaultTemplateObject } from './utils';
 
 const DEFAULT_SETTINGS: Partial<MemexSettings> = {
 	dateFormat: 'YYYY-MM-DD',
 	memexFolder: 'Memex-Local-Sync',
-	template: "",
+	template: "Clippings Template", // /Templates/Clippings.md
 	destination: "Clippings",
 	overwrite: false,
 	ignore: ["Saved from Mobile", "Inbox"] // default from Memex
@@ -15,12 +16,11 @@ const DEFAULT_SETTINGS: Partial<MemexSettings> = {
 
 export default class MemexClipper extends Plugin {
 
+	// Settings
 	settings: MemexSettings;
-
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 	}
-
 	async saveSettings() {
 		await this.saveData(this.settings);
 	}
@@ -31,20 +31,41 @@ export default class MemexClipper extends Plugin {
 		await this.loadSettings()
 		this.addSettingTab(new MemexClipperSettings(this.app, this))
 
-		const parser = new FrontMatterParser(this.settings.ignore);
-		const processor = new FileProcessor(parser, file => this.app.vault.read(file));
+		// Template: read
+		let template : StructureParser<TProperties | string>;
+		try {
+			const templateFile = returnTFile(this.settings.template, this.app.vault);
+			const templateContent = await this.app.vault.read(templateFile);
+			template = new StructureParser(templateContent);
+		} catch (error) {
+			console.warn("Template file not found, defaulting")
+			const defaultTemplate = createDefaultTemplateObject() as unknown as TProperties;
+			template = new StructureParser(defaultTemplate);
+		}
+	
+		// Parser and Processor to load yaml files
+		// const parser = new FrontMatterParser(this.settings.ignore);
+		// const processor = new FileProcessor(parser, file => this.app.vault.read(file));
 
 		// This creates an icon in the left ribbon.
 		this.addRibbonIcon('dice', 'Greet', async () => {
 			const clippings = await this.findAllFilesWithClippings();
+			console.log(clippings.length)
+
 			const files: Clip[] = [];
+			console.log(files.length)
 
 			for (const file of clippings) {
-				const fileData = await processor.process(file);
-				if (fileData) {
+				console.log("Reading " + file.name)
+
+				const content = await this.app.vault.read(file);
+				const memexFile = new MemexFile(content, this.settings.ignore);
+
+				if (memexFile) {
 					const clip = new Clip(
-						fileData.properties,
-						fileData.highlights,
+						template.properties,
+						memexFile.properties,
+						memexFile.annotations,
 						this.app.vault,
 						this.settings.destination,
 						this.settings.overwrite
@@ -59,6 +80,7 @@ export default class MemexClipper extends Plugin {
 					saved_count += file.save();
 				} catch (error) {
 					new Notice("Error saving " + file.name)
+					console.error(error)
 				}
 
 			}
@@ -73,7 +95,6 @@ export default class MemexClipper extends Plugin {
 
 	}
 
-	// TODO; instead of searching in the vault, search for this.settings.memexFolder
 	async findAllFilesWithClippings() {
 		const files = this.app.vault.getFiles();
 		const clippingsFiles = [];

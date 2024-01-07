@@ -1,23 +1,26 @@
-import { Property, Annotation, MemexSyncProperties } from "src/models";
+import { TProperties, Annotation, MemexSyncProperties } from "src/models";
 import { searchFileName } from "src/utils";
 import { TFile, Vault } from "obsidian";
 
 export class Clip {
     name: string;
-    properties: Property;
+    template: TProperties;
+    properties: TProperties;
     content: Annotation[];
     vault: Vault;
     overwrite = false;
     destination: string;
 
     constructor(
+        template: TProperties,
         properties: MemexSyncProperties,
         annotations: Annotation[],
         vault: Vault,
         destination: string,
         overwrite: boolean
     ) {
-        this.properties = { category: ["\"[[Clippings]]\""] };
+        this.template = template;
+        // this.properties = this.mapProperties(properties);
         this.mapProperties(properties);
         this.content = annotations;
         this.vault = vault;
@@ -25,34 +28,31 @@ export class Clip {
         this.overwrite = overwrite;
     }
 
-    private mapProperties(originalProperties: MemexSyncProperties) {
+    private mapProperties(originalProperties: MemexSyncProperties): void {
         for (const key in originalProperties) {
             if (originalProperties.hasOwnProperty(key)) {
                 const value = originalProperties[key as keyof MemexSyncProperties]; // Type assertion
 
                 switch (key) {
                     case "Spaces":
-                        this.properties.tags = Array.isArray(value) ? value.map(
+                        this.template.tags = Array.isArray(value) ? value.map(
                             (tag: string) => tag.toLowerCase().replace(/\[|\]/g, '').trim()
                         ) : [];
                         break;
                     case "Title":
-                        this.properties.title = typeof value === 'string' ? value : '';
-                        this.setName(this.properties.title.replace(/\//g, '-'));
+                        this.template.title = typeof value === 'string' ? value : '';
+                        // replace all special characters with a dash, except spaces
+                        this.setName(String(this.template.title).replace(/[^a-zA-Z0-9 ]/g, "-"));
                         break;
                     case "Created at":
-                        this.properties.clipped = typeof value === 'string' ? value : '';
+                        this.template.clipped = typeof value === 'string' ? value : '';
                         break;
                     case "Url":
-                        this.properties.url = typeof value === 'string' ? value : '';
+                        this.template.url = typeof value === 'string' ? value : '';
                         break;
                     default:
                         console.warn("Unknown key: " + key)
                 }
-
-                this.properties.published = '';
-                this.properties.author = '';
-                this.properties.topics = [];
             }
         }
     }
@@ -60,7 +60,7 @@ export class Clip {
     public save(): number {
         if (this.name === "") {
             throw new Error("Clip name is empty");
-        } else if (this.properties.title === "") {
+        } else if (this.template.title === "") {
             throw new Error("Clip title is empty");
         }
 
@@ -108,14 +108,14 @@ export class Clip {
 
     private formatProperties() {
         const yaml = "---\n";
-        const category = "category: " + this.properties.category + "\n"
-        const title = "title: " + this.properties.title + "\n"
-        const author = "author: " + this.properties.author + "\n"
-        const created = "clipped: " + this.properties.clipped + "\n"
-        const published = "published: " + this.properties.published + "\n"
-        const topics = "topics: " + this.properties.topics + "\n"
-        const url = "url: " + this.properties.url + "\n"
-        const tags = "tags: " + this.properties.tags + "\n"
+        const category = "category: " + this.template.category + "\n"
+        const title = "title: " + this.template.title + "\n"
+        const author = "author: " + this.template.author + "\n"
+        const created = "clipped: " + this.template.clipped + "\n"
+        const published = "published: " + this.template.published + "\n"
+        const topics = "topics: " + this.template.topics + "\n"
+        const url = "url: " + this.template.url + "\n"
+        const tags = "tags: " + this.template.tags + "\n"
 
         return yaml + category + title + author + created + published + url + topics + tags + yaml;
     }

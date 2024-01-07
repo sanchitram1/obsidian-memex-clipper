@@ -2,8 +2,11 @@ export interface MyPluginSettings {
 	mySetting: string;
 }
 
-export interface Property {
-	// TODO: derived from a template
+export interface TProperties {
+    [key: string]: unknown;
+}
+
+export interface DefaultClip {
 	category: string[];
 	title?: string;
 	author?: string | null;
@@ -11,7 +14,7 @@ export interface Property {
 	clipped?: string;
 	topics?: string[];
 	tags?: string[];
-	url?: string;
+	source?: string;
 }
 
 export interface Annotation {
