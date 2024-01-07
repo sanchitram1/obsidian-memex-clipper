@@ -2,13 +2,13 @@ import { Notice, Plugin } from 'obsidian';
 import { StructureParser, MemexFile } from './parser';
 import { Clip } from './clipping';
 import { MemexClipperSettings } from './settings';
-import { MemexSettings, TProperties } from './models';
+import { MemexSettings, TProperties } from './types';
 import { returnTFile, createDefaultTemplateObject } from './utils';
 
 const DEFAULT_SETTINGS: Partial<MemexSettings> = {
 	dateFormat: 'YYYY-MM-DD',
 	memexFolder: 'Memex-Local-Sync',
-	template: "Clippings Template", // /Templates/Clippings.md
+	template: "Clippings Template",
 	destination: "Clippings",
 	overwrite: false,
 	ignore: ["Saved from Mobile", "Inbox"] // default from Memex
@@ -31,21 +31,19 @@ export default class MemexClipper extends Plugin {
 		await this.loadSettings()
 		this.addSettingTab(new MemexClipperSettings(this.app, this))
 
-		// Template: read
+		// Read the template
 		let template : StructureParser<TProperties | string>;
 		try {
 			const templateFile = returnTFile(this.settings.template, this.app.vault);
 			const templateContent = await this.app.vault.read(templateFile);
 			template = new StructureParser(templateContent);
+			console.log("Template file found")
 		} catch (error) {
 			console.warn("Template file not found, defaulting")
 			const defaultTemplate = createDefaultTemplateObject() as unknown as TProperties;
 			template = new StructureParser(defaultTemplate);
 		}
-	
-		// Parser and Processor to load yaml files
-		// const parser = new FrontMatterParser(this.settings.ignore);
-		// const processor = new FileProcessor(parser, file => this.app.vault.read(file));
+
 
 		// This creates an icon in the left ribbon.
 		this.addRibbonIcon('dice', 'Greet', async () => {
@@ -56,14 +54,14 @@ export default class MemexClipper extends Plugin {
 			console.log(files.length)
 
 			for (const file of clippings) {
-				console.log("Reading " + file.name)
-
 				const content = await this.app.vault.read(file);
 				const memexFile = new MemexFile(content, this.settings.ignore);
 
+				console.log(JSON.stringify(memexFile.properties))
+
 				if (memexFile) {
 					const clip = new Clip(
-						template.properties,
+						template.properties as TProperties,
 						memexFile.properties,
 						memexFile.annotations,
 						this.app.vault,
