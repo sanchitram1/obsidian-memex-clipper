@@ -41,8 +41,11 @@ export class Clip {
                         break;
                     case "Title":
                         this.template.title = typeof value === 'string' ? value : '';
-                        // replace all special characters with a dash, except spaces
-                        this.setName(String(this.template.title).replace(/[^a-zA-Z0-9 ]/g, "-"));
+                        this.setName(
+                            String(this.template.title)
+                            .replace(/\//g, ' ')
+                            .replace(/[^a-zA-Z0-9.,'']/g, ' ')
+                        );
                         break;
                     case "Created at":
                         this.template.clipped = typeof value === 'string' ? value : '';
@@ -131,7 +134,7 @@ export class Clip {
     }
 
     private exists(): boolean {
-        return searchFileName(this.name + ".md", this.vault);
+        return searchFileName(this.name + ".md", this.vault, this.destination);
     }
 
     private setName = (name: string) => {
