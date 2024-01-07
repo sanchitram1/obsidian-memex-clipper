@@ -1,4 +1,4 @@
-import { TProperties, Annotation, MemexSyncProperties } from "src/models";
+import { TProperties, Annotation, MemexSyncProperties } from "src/types";
 import { searchFileName } from "src/utils";
 import { TFile, Vault } from "obsidian";
 
@@ -20,7 +20,6 @@ export class Clip {
         overwrite: boolean
     ) {
         this.template = template;
-        // this.properties = this.mapProperties(properties);
         this.mapProperties(properties);
         this.content = annotations;
         this.vault = vault;
@@ -34,12 +33,13 @@ export class Clip {
                 const value = originalProperties[key as keyof MemexSyncProperties]; // Type assertion
 
                 switch (key) {
-                    case "Spaces":
+                    case "Spaces": {
                         this.template.tags = Array.isArray(value) ? value.map(
                             (tag: string) => tag.toLowerCase().replace(/\[|\]/g, '').trim()
                         ) : [];
                         break;
-                    case "Title":
+                    }
+                    case "Title": {
                         this.template.title = typeof value === 'string' ? value : '';
                         this.setName(
                             String(this.template.title)
@@ -47,12 +47,22 @@ export class Clip {
                             .replace(/[^a-zA-Z0-9.,'']/g, ' ')
                         );
                         break;
-                    case "Created at":
-                        this.template.clipped = typeof value === 'string' ? value : '';
+                    }
+                    case "Created at": {
+                        let created = typeof value === 'string' ? value : '';
+                        created = created
+                            .replace(/\[|\]/g, '')
+                            .trim();
+                        const year = created.slice(0, 4);
+                        const day = created.slice(5, 7);
+                        const month = created.slice(8, 10);
+                        this.template.clipped = year + "/" + month + "/" + day;
                         break;
-                    case "Url":
-                        this.template.url = typeof value === 'string' ? value : '';
+                    }
+                    case "Url": {
+                        this.template.source = typeof value === 'string' ? value : '';
                         break;
+                    }
                     default:
                         console.warn("Unknown key: " + key)
                 }
@@ -77,10 +87,11 @@ export class Clip {
 
     private update(): number {
         if (this.overwrite) {
-            console.log("Overwriting existing " + this.name);
             const existing_file = this.vault.getAbstractFileByPath(
                 this.destination + "/" + this.name + ".md"
             );
+            console.log("Updating " + this.destination + "/" + this.name + ".md");
+            console.log("Data: " + JSON.stringify(this.template))
             // Update if it's a TFile (being safe)
             if (existing_file instanceof TFile) {
                 this.vault.modify(
@@ -111,16 +122,13 @@ export class Clip {
 
     private formatProperties() {
         const yaml = "---\n";
-        const category = "category: " + this.template.category + "\n"
-        const title = "title: " + this.template.title + "\n"
-        const author = "author: " + this.template.author + "\n"
-        const created = "clipped: " + this.template.clipped + "\n"
-        const published = "published: " + this.template.published + "\n"
-        const topics = "topics: " + this.template.topics + "\n"
-        const url = "url: " + this.template.url + "\n"
-        const tags = "tags: " + this.template.tags + "\n"
+        let content = ""
+        
+        for (const key in this.template) {
+            content += key + ": " + this.purgeBrackets(String(this.template[key])) + "\n";
+        }
 
-        return yaml + category + title + author + created + published + url + topics + tags + yaml;
+        return yaml + content + yaml;
     }
 
     private formatContent() {
@@ -139,5 +147,9 @@ export class Clip {
 
     private setName = (name: string) => {
         this.name = name;
+    }
+
+    private purgeBrackets = (text: string) => {
+        return text.replace(/\[|\]/g, '');
     }
 }

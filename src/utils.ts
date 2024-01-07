@@ -1,5 +1,5 @@
 import { TFile, Vault } from 'obsidian';
-import { DefaultClip, MemexSyncProperties } from './models';
+import { DefaultClip, MemexSyncProperties } from './types';
 
 export function parseDate (dateString: string): string {
     // receives a string in the format YYYY-DD-MM and returns a date object
@@ -42,7 +42,7 @@ export function returnTFile (fileName: string, vault: Vault): TFile {
 
 export function createDefaultTemplateObject(): DefaultClip {
     const defaultObject: DefaultClip = {
-        "category": ["[[Clippings]]"],
+        "category": ["Clippings"],
         "title": "",
         "author": "",
         "published": "",
