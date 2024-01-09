@@ -39,7 +39,7 @@ export default class MemexClipper extends Plugin {
 			template = new StructureParser(templateContent);
 			console.log("Template file found")
 		} catch (error) {
-			console.warn("Template file not found, defaulting")
+			new Notice("Template file not found, defaulting to generic template")
 			const defaultTemplate = createDefaultTemplateObject() as unknown as TProperties;
 			template = new StructureParser(defaultTemplate);
 		}
